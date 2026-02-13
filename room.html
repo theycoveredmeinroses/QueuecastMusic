@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QueueCast Room</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- App Scripts -->
+ <script src="js/firebase.js"></script>
+ <script src="js/room.js" defer></script>
+<script src="js/spotify.js"></script>
+
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h2 id="roomTitle">Loading...</h2>
+
+    <!-- Spotify -->
+    <button id="spotifyLoginBtn" onclick="spotifyLogin()">🎧 Login with Spotify</button>
+
+    <input id="searchBox" placeholder="Search songs on Spotify" disabled>
+    <button id="searchButton" onclick="searchSongs()" disabled>Search</button>
+
+    <div id="searchResults"></div>
+
+    <!-- Now Playing -->
+    <div class="now-playing">
+      <h3>🎶 Now Playing</h3>
+      <p id="np-title">-</p>
+      <p id="np-artist">-</p>
+    </div>
+
+    <!-- Queue -->
+    <h3>🎵 Queue</h3>
+    <div id="songList"></div>
+
+    <button class="leave-btn" onclick="leaveRoom()">Leave Room</button>
+
+  </div>
+
+</body>
+</html>

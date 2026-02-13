@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QueueCast Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- App Scripts (ORDER MATTERS) -->
+  <script src="js/firebase.js"></script>
+  
+  <script src="js/home.js" defer></script>
+  <script src="js/auth.js" defer></script>
+</head>
+
+<body>
+
+  <h1>QueueCast Rooms 🎶</h1>
+
+  <input id="roomName" placeholder="Room name">
+  <input id="roomPass" placeholder="Passcode (optional)">
+  <button onclick="createRoom()">Create Room</button>
+
+  <hr>
+
+  <div id="roomList"></div>
+
+</body>
+</html>
