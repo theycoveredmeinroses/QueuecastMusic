@@ -1,11 +1,11 @@
+spotify.js
 // =======================================
 // SPOTIFY LOGIN (PKCE) — FINAL STABLE (STATE FIX)
 // Works on mobile + desktop
 // =======================================
 
 const SPOTIFY_CLIENT_ID = "49684497af374db1afc6cdf71f0ff72b";
-const BASE_REDIRECT = "https://queuecastemusic.netlify.app/room.html";
-
+const BASE_REDIRECT = "https://queuecastformusic.netlify.app/room.html";
 
 // ---------------------------------------
 // Random string generator
@@ -54,7 +54,9 @@ async function spotifyLogin() {
     return;
   }
 
-  localStorage.setItem("spotify_room", roomId); // ✅ FIX
+localStorage.setItem("spotify_room", roomId);
+sessionStorage.setItem("spotify_room", roomId);
+
 
   const verifier = generateRandomString(128);
   const challenge = await sha256(verifier);
@@ -129,7 +131,7 @@ localStorage.removeItem("spotify_verifier");
 
 window.history.replaceState({}, document.title, `/room.html?room=${roomId}`);
 
-enableSpotifyUI();s;
+enableSpotifyUI();
 }
 
 
