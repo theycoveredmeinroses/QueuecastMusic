@@ -1,3 +1,4 @@
+firebase.js
 const firebaseConfig = {
   apiKey: "AIzaSyDYiZIQC6Ej9wmW3t_RuVdu5nxnf9VZ1lA",
   authDomain: "queuecast-390d2.firebaseapp.com",
@@ -15,4 +16,5 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const provider = new firebase.auth.GoogleAuthProvider();
 
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+  .catch(console.error);

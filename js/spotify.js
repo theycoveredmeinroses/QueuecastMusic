@@ -1,11 +1,11 @@
-spotify.js
 // =======================================
-// SPOTIFY LOGIN (PKCE) — FINAL STABLE (STATE FIX)
-// Works on mobile + desktop
+// SPOTIFY LOGIN (PKCE) — FINAL DEPLOY SAFE
 // =======================================
 
 const SPOTIFY_CLIENT_ID = "49684497af374db1afc6cdf71f0ff72b";
-const BASE_REDIRECT = "https://queuecastformusic.netlify.app/room.html";
+
+// ✅ AUTO-USES CURRENT DOMAIN (NETLIFY SAFE)
+const BASE_REDIRECT = window.location.origin + "/room.html";
 
 // ---------------------------------------
 // Random string generator
@@ -19,7 +19,6 @@ function generateRandomString(length) {
   return result;
 }
 
-
 // ---------------------------------------
 // Base64 URL encode
 // ---------------------------------------
@@ -30,7 +29,6 @@ function base64UrlEncode(buffer) {
     .replace(/=+$/, "");
 }
 
-
 // ---------------------------------------
 // SHA256 PKCE
 // ---------------------------------------
@@ -40,9 +38,8 @@ async function sha256(text) {
   return base64UrlEncode(digest);
 }
 
-
 // ---------------------------------------
-// START SPOTIFY LOGIN (WITH STATE)
+// START SPOTIFY LOGIN
 // ---------------------------------------
 async function spotifyLogin() {
 
@@ -54,9 +51,8 @@ async function spotifyLogin() {
     return;
   }
 
-localStorage.setItem("spotify_room", roomId);
-sessionStorage.setItem("spotify_room", roomId);
-
+  localStorage.setItem("spotify_room", roomId);
+  sessionStorage.setItem("spotify_room", roomId);
 
   const verifier = generateRandomString(128);
   const challenge = await sha256(verifier);
@@ -80,8 +76,6 @@ sessionStorage.setItem("spotify_room", roomId);
   window.location.href = authUrl;
 }
 
-
-
 // ---------------------------------------
 // HANDLE SPOTIFY REDIRECT
 // ---------------------------------------
@@ -89,7 +83,7 @@ async function checkSpotifyRedirect() {
 
   const params = new URLSearchParams(window.location.search);
   const code = params.get("code");
-  const roomId = params.get("state"); // ✅ GET ROOM FROM STATE
+  const roomId = params.get("state");
 
   if (!code) return;
 
@@ -126,20 +120,20 @@ async function checkSpotifyRedirect() {
     alert("Spotify login failed");
     return;
   }
-localStorage.setItem("spotify_access_token", data.access_token);
-localStorage.removeItem("spotify_verifier");
 
-window.history.replaceState({}, document.title, `room.html?room=${roomId}`);
+  localStorage.setItem("spotify_access_token", data.access_token);
+  localStorage.removeItem("spotify_verifier");
 
+  window.history.replaceState({}, document.title, `room.html?room=${roomId}`);
 
-enableSpotifyUI();
+  enableSpotifyUI();
 }
 
-
 // ---------------------------------------
-// ENABLE UI AFTER LOGIN
+// ENABLE UI
 // ---------------------------------------
 function enableSpotifyUI() {
+
   const btn = document.getElementById("spotifyLoginBtn");
   if (btn) btn.style.display = "none";
 
@@ -149,7 +143,6 @@ function enableSpotifyUI() {
   if (box) box.disabled = false;
   if (searchBtn) searchBtn.disabled = false;
 }
-
 
 // ---------------------------------------
 // SEARCH SONGS
@@ -226,25 +219,19 @@ async function searchSongs() {
   }
 }
 
-
 // ---------------------------------------
 // INIT
-// ---------------------------------------
-// ---------------------------------------
-// INIT (MOBILE SAFE VERSION)
 // ---------------------------------------
 window.addEventListener("load", async () => {
 
   const params = new URLSearchParams(window.location.search);
   const hasCode = params.get("code");
 
-  // If coming from Spotify redirect
   if (hasCode) {
     await checkSpotifyRedirect();
-    return; // stop here (avoid double init)
+    return;
   }
 
-  // Normal page load
   const token = localStorage.getItem("spotify_access_token");
 
   if (token) {
@@ -252,4 +239,3 @@ window.addEventListener("load", async () => {
   }
 
 });
-

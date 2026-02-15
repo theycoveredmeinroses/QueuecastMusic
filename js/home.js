@@ -1,3 +1,4 @@
+home.js
 function makeRoomId() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let id = "";
