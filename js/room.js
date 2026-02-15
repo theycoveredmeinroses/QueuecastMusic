@@ -1,3 +1,4 @@
+room.js
 // ==============================
 // ROOM.JS — FINAL STABLE VERSION (MOBILE SAFE)
 // ==============================
@@ -18,10 +19,11 @@ function resolveRoomId() {
     window.history.replaceState({}, "", `room.html?room=${roomId}`);
   }
 
-  if (!roomId && localStorage.getItem("spotify_room")) {
-    roomId = localStorage.getItem("spotify_room");
-    window.history.replaceState({}, "", `room.html?room=${roomId}`);
-  }
+  if (!roomId && (localStorage.getItem("spotify_room") || sessionStorage.getItem("spotify_room"))) {
+  roomId = localStorage.getItem("spotify_room") || sessionStorage.getItem("spotify_room");
+  window.history.replaceState({}, "", `room.html?room=${roomId}`);
+}
+
 
   return roomId;
 }

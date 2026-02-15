@@ -1,30 +1,31 @@
+auth.js
 // 🔒 auth.js — ROOM SAFE FINAL VERSION
 
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
+const emailInput = document.getElementById("email") || null;
+const passwordInput = document.getElementById("password") || null;
+
 
 auth.onAuthStateChanged(user => {
-
   const path = location.pathname;
+  const params = new URLSearchParams(location.search);
 
-  // ✅ NEVER interfere with room page (even during Spotify redirect)
-  if (path.includes("room.html")) {
-    return;
-  }
+  // Allow Spotify redirect to process first
+  if (params.has("code")) return;
 
-  // Not logged in → protect home page only
+  // If NOT logged in
   if (!user) {
-    if (path.includes("home.html")) {
+    if (path.includes("home.html") || path.includes("room.html")) {
       window.location.replace("index.html");
     }
     return;
   }
 
-  // Logged in → prevent going back to login page
+  // If logged in and on login page
   if (path.includes("index.html") || path === "/") {
     window.location.replace("home.html");
   }
 });
+
 
 
 // ==============================

@@ -129,7 +129,8 @@ async function checkSpotifyRedirect() {
 localStorage.setItem("spotify_access_token", data.access_token);
 localStorage.removeItem("spotify_verifier");
 
-window.history.replaceState({}, document.title, `/room.html?room=${roomId}`);
+window.history.replaceState({}, document.title, `room.html?room=${roomId}`);
+
 
 enableSpotifyUI();
 }
