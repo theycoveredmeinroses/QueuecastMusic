@@ -1,81 +1,101 @@
-room.js
 // ==============================
-// ROOM.JS — FINAL STABLE VERSION (MOBILE SAFE)
+// ROOM.JS — STABLE FIXED VERSION
 // ==============================
 
 const roomTitle = document.getElementById("roomTitle");
 const songList = document.getElementById("songList");
 
-const params = new URLSearchParams(window.location.search);
-
-let roomId = params.get("room");
-
-// 🔥 IMPORTANT: Wait for Spotify redirect cleanup before redirecting home
-function resolveRoomId() {
-  const state = new URLSearchParams(window.location.search).get("state");
-
-  if (!roomId && state) {
-    roomId = state;
-    window.history.replaceState({}, "", `room.html?room=${roomId}`);
-  }
-
-  if (!roomId && (localStorage.getItem("spotify_room") || sessionStorage.getItem("spotify_room"))) {
-  roomId = localStorage.getItem("spotify_room") || sessionStorage.getItem("spotify_room");
-  window.history.replaceState({}, "", `room.html?room=${roomId}`);
-}
-
-
-  return roomId;
-}
-
-roomId = resolveRoomId();
-
-if (!roomId) {
-  // Delay redirect slightly (prevents race condition on mobile)
-  setTimeout(() => {
-    if (!new URLSearchParams(window.location.search).get("room")) {
-      window.location.replace("home.html");
-    }
-  }, 800);
-}
-
-// ==============================
-// FIREBASE REFERENCES
-// ==============================
-
-const roomRef = db.collection("rooms").doc(roomId);
-const songsRef = roomRef.collection("songs");
-const votesRef = roomRef.collection("votes");
-
 let currentUser = null;
 let isHost = false;
+let roomId = null;
+let roomRef = null;
+let songsRef = null;
+let votesRef = null;
+
+
+// ==============================
+// RESOLVE ROOM ID (Spotify safe)
+// ==============================
+
+function resolveRoomId() {
+
+  const params = new URLSearchParams(window.location.search);
+  let id = params.get("room");
+
+  const state = params.get("state");
+
+  // If coming back from Spotify
+  if (!id && state) {
+    id = state;
+    window.history.replaceState({}, "", `room.html?room=${id}`);
+  }
+
+  // Fallback to storage (Spotify mobile safety)
+  if (!id) {
+    id = localStorage.getItem("spotify_room") ||
+         sessionStorage.getItem("spotify_room");
+    if (id) {
+      window.history.replaceState({}, "", `room.html?room=${id}`);
+    }
+  }
+
+  return id;
+}
+
+
+// ==============================
+// INITIALIZE ROOM
+// ==============================
+
+function initRoom() {
+
+  roomId = resolveRoomId();
+
+  if (!roomId) {
+    alert("Room not found");
+    window.location.replace("home.html");
+    return;
+  }
+
+  roomRef = db.collection("rooms").doc(roomId);
+  songsRef = roomRef.collection("songs");
+  votesRef = roomRef.collection("votes");
+
+  setupAuthListener();
+}
+
 
 // ==============================
 // AUTH LISTENER
 // ==============================
 
-auth.onAuthStateChanged(user => {
+function setupAuthListener() {
 
-  if (!user) return;
+  auth.onAuthStateChanged(user => {
 
-  currentUser = user;
+    if (!user) return;
 
-  roomRef.get().then(doc => {
+    currentUser = user;
 
-    if (!doc.exists) {
-      alert("Room not found");
-      window.location.replace("home.html");
-      return;
-    }
+    roomRef.get().then(doc => {
 
-    const room = doc.data();
-    roomTitle.innerText = room.name;
-    isHost = user.uid === room.hostId;
+      if (!doc.exists) {
+        alert("Room not found");
+        window.location.replace("home.html");
+        return;
+      }
 
-    listenSongs();
+      const room = doc.data();
+      roomTitle.innerText = room.name;
+      isHost = user.uid === room.hostId;
+
+      listenSongs();
+    });
+
   });
 
-});
+}
+
 
 // ==============================
 // LISTEN FOR SONG UPDATES
@@ -83,34 +103,38 @@ auth.onAuthStateChanged(user => {
 
 function listenSongs() {
 
-  songsRef.orderBy("votes", "desc").onSnapshot(snapshot => {
+  songsRef.orderBy("votes", "desc")
+    .onSnapshot(snapshot => {
 
-    songList.innerHTML = "";
+      songList.innerHTML = "";
 
-    snapshot.forEach(doc => {
+      snapshot.forEach(doc => {
 
-      const s = doc.data();
+        const s = doc.data();
 
-      songList.innerHTML += `
-        <div>
+        const div = document.createElement("div");
+
+        div.innerHTML = `
           <strong>${s.title}</strong> — ${s.artist}
           <p>Votes: ${s.votes || 0}</p>
           <button onclick="voteSong('${doc.id}')">Vote</button>
           ${isHost ? `<button onclick="removeSong('${doc.id}')">Remove</button>` : ""}
-        </div>
-      `;
+        `;
+
+        songList.appendChild(div);
+
+      });
 
     });
 
-  });
-
 }
 
+
 // ==============================
-// VOTING SYSTEM
+// VOTE SONG
 // ==============================
 
-window.voteSong = async songId => {
+window.voteSong = async (songId) => {
 
   if (!currentUser) return;
 
@@ -120,14 +144,16 @@ window.voteSong = async songId => {
     const prev = await tx.get(voteDoc);
 
     if (prev.exists) {
-      tx.update(songsRef.doc(prev.data().songId), {
-        votes: firebase.firestore.FieldValue.increment(-1)
-      });
+      tx.update(
+        songsRef.doc(prev.data().songId),
+        { votes: firebase.firestore.FieldValue.increment(-1) }
+      );
     }
 
-    tx.update(songsRef.doc(songId), {
-      votes: firebase.firestore.FieldValue.increment(1)
-    });
+    tx.update(
+      songsRef.doc(songId),
+      { votes: firebase.firestore.FieldValue.increment(1) }
+    );
 
     tx.set(voteDoc, { songId });
 
@@ -135,13 +161,17 @@ window.voteSong = async songId => {
 
 };
 
+
 // ==============================
-// REMOVE SONG (HOST ONLY)
+// REMOVE SONG (HOST)
 // ==============================
 
-window.removeSong = id => {
-  if (isHost) songsRef.doc(id).delete();
+window.removeSong = (id) => {
+  if (isHost) {
+    songsRef.doc(id).delete();
+  }
 };
+
 
 // ==============================
 // LEAVE ROOM
@@ -151,6 +181,7 @@ window.leaveRoom = () => {
   window.location.replace("home.html");
 };
 
+
 // ==============================
 // ADD SPOTIFY SONG
 // ==============================
@@ -158,7 +189,7 @@ window.leaveRoom = () => {
 window.addSpotifySong = async (id, title, artist) => {
 
   if (!currentUser) {
-    alert("You must be logged in");
+    alert("Login required");
     return;
   }
 
@@ -172,3 +203,12 @@ window.addSpotifySong = async (id, title, artist) => {
   }, { merge: true });
 
 };
+
+
+// ==============================
+// START
+// ==============================
+
+window.addEventListener("load", () => {
+  initRoom();
+});
