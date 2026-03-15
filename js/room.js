@@ -100,35 +100,41 @@ function setupAuthListener() {
 // ==============================
 // LISTEN FOR SONG UPDATES
 // ==============================
+let currentPlayingId = null;
 
 function listenSongs() {
-
   songsRef.orderBy("votes", "desc")
     .onSnapshot(snapshot => {
-
       songList.innerHTML = "";
-
-      snapshot.forEach(doc => {
-
+      let topSong = null;
+      snapshot.forEach((doc, index) => {
         const s = doc.data();
-
+        if(index === 0){
+          topSong = s;
+        }
         const div = document.createElement("div");
-
         div.innerHTML = `
           <strong>${s.title}</strong> — ${s.artist}
           <p>Votes: ${s.votes || 0}</p>
           <button onclick="voteSong('${doc.id}')">Vote</button>
           ${isHost ? `<button onclick="removeSong('${doc.id}')">Remove</button>` : ""}
         `;
-
         songList.appendChild(div);
-
       });
+      if (topSong) {
+  document.getElementById("np-title").innerText = topSong.title;
+  document.getElementById("np-artist").innerText = topSong.artist;
+}
+
+      // HOST controls playback
+      if (isHost && topSong && topSong.spotifyId !== currentPlayingId) {
+  currentPlayingId = topSong.spotifyId;
+  playSong(topSong.spotifyId);
+}
 
     });
 
 }
-
 
 // ==============================
 // VOTE SONG

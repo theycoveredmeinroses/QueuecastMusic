@@ -1,10 +1,9 @@
+```javascript
 // =======================================
-// SPOTIFY LOGIN (PKCE) — FINAL DEPLOY SAFE
+// SPOTIFY LOGIN (PKCE) — QUEUECAST FINAL
 // =======================================
 
 const SPOTIFY_CLIENT_ID = "49684497af374db1afc6cdf71f0ff72b";
-
-// ✅ AUTO-USES CURRENT DOMAIN (NETLIFY SAFE)
 const BASE_REDIRECT = window.location.origin + "/room.html";
 
 // ---------------------------------------
@@ -181,11 +180,6 @@ async function searchSongs() {
       return;
     }
 
-    if (!res.ok) {
-      results.innerHTML = "<p>Search failed</p>";
-      return;
-    }
-
     const data = await res.json();
 
     results.innerHTML = "";
@@ -220,8 +214,103 @@ async function searchSongs() {
 }
 
 // ---------------------------------------
+// SPOTIFY PLAYER
+// ---------------------------------------
+
+let player;
+let deviceId;
+
+window.onSpotifyWebPlaybackSDKReady = () => {
+
+  const token = localStorage.getItem("spotify_access_token");
+
+  if (!token) return;
+
+  player = new Spotify.Player({
+    name: "QueueCast Player",
+    getOAuthToken: cb => { cb(token); },
+    volume: 0.5
+  });
+
+  player.addListener("ready", ({ device_id }) => {
+    console.log("Spotify Player Ready:", device_id);
+    deviceId = device_id;
+  });
+
+  // 🔥 Detect when song finishes
+  player.addListener("player_state_changed", state => {
+
+  if (!state) return;
+
+  const position = state.position;
+  const duration = state.duration;
+
+  // Update progress bar
+  const percent = (position / duration) * 100;
+
+  const bar = document.getElementById("progress-bar");
+  if(bar){
+    bar.style.width = percent + "%";
+  }
+
+  // Update time text
+  const time = document.getElementById("song-time");
+  if(time){
+    time.innerText = formatTime(position) + " / " + formatTime(duration);
+  }
+
+  // Detect song finished
+  if (state.paused && position === 0) {
+
+    if (window.onSongFinished) {
+      window.onSongFinished();
+    }
+
+  }
+
+});
+
+  player.connect();
+};
+
+// ---------------------------------------
+// PLAY SONG
+// ---------------------------------------
+
+async function playSong(spotifyId) {
+
+  const token = localStorage.getItem("spotify_access_token");
+
+  if (!deviceId) {
+    alert("Spotify player not ready");
+    return;
+  }
+
+  await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      uris: [`spotify:track:${spotifyId}`]
+    })
+  });
+
+}
+function formatTime(ms){
+
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+
+  return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+
+}
+
+// ---------------------------------------
 // INIT
 // ---------------------------------------
+
 window.addEventListener("load", async () => {
 
   const params = new URLSearchParams(window.location.search);
@@ -239,3 +328,4 @@ window.addEventListener("load", async () => {
   }
 
 });
+```
